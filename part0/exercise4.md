@@ -2,10 +2,12 @@ sequenceDiagram
     participant browser 
     participant server
 
-    browser->>server : POST https://studies.cs.helsinki.fi/exampleapp/new_note
+    browser->>server : POST https://studies.cs.helsinki.fi/exampleapp/new_note {note: "hello"}
     activate server
     server->>browser: HTML document
     deactivate server
+
+    Note right of server: Server stores received note.
 
     browser->>server: GET https://studies.cs.helsinki.fi/exampleapp/notes
     activate server
