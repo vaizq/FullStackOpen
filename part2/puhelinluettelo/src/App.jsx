@@ -1,5 +1,6 @@
-import { useState } from 'react'
-
+import { useState, useEffect } from 'react'
+import axios from 'axios'
+import contactService from './services/contacts'
 
 const Filter = ({value, handleChange}) => (
   <div>Filter <input value={value} onChange={handleChange}/></div>
@@ -18,34 +19,56 @@ const PersonForm = ({handleSubmit, handleNameChange, handleNumberChange, name, n
   </>
 )
 
+const Contact = ({person, handleErase}) => (
+    <div>
+      <p style={{display: 'inline'}}>{person.name} {person.number}</p>
+      <button onClick={() => { 
+        if (window.confirm(`Delete ${person.name}?`)) {
+          handleErase(person.id)
+        }
+      }}>delete</button>
+    </div>
+)
 
-const Contacts = ({persons}) => (
+const Contacts = ({persons, handleErase}) => (
   <>
-  {persons.map((person) => 
-    <p key={person.name}>{person.name} {person.number}</p>
-  )}
+    {persons.map((person) =>  (
+          <Contact key={person.name} person={person} handleErase={handleErase} />
+      )
+    )}
   </>
 )
 
 
 const App = () => {
-  const [persons, setPersons] = useState([
-    { name: 'Arto Hellas',number: '0469696969'},
-    { name: 'Lauri Tikka',number: '0453448999'},
-    { name: 'Akseli Kukkonen',number: '0469777777'},
-    { name: 'Väinö Heijari',number: '0469494949'},
-  ]) 
+  const [persons, setPersons] = useState([]) 
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [filter, setFilter] = useState('')
 
+  useEffect(() => {
+    contactService
+      .getAll()
+      .then(contacts => setPersons(contacts))
+  }, [])
+
   const addPerson = (event) => {
     event.preventDefault()
+
+    const contact = {name: newName, number: newNumber}
+
     if (!persons.map((p) => p.name).includes(newName)) {
-      setPersons(persons.concat({name: newName, number: newNumber}))
+      contactService
+        .create(contact)
+        .then(contact => setPersons(persons.concat(contact)))
     }
     else {
-      alert(`Person ${newName} is already in the phonebook`)
+      if (window.confirm(`Are you sure you want to modify ${contact.name}`)) {
+        contact.id = persons.find(p => p.name === contact.name).id
+        contactService
+          .update(contact)
+          .then(contact => setPersons(persons.map(p => p.name !== contact.name ? p : contact)))
+      }
     }
 
     setNewName('')
@@ -62,6 +85,12 @@ const App = () => {
 
   const updateFilter = (event) => {
     setFilter(event.target.value)
+  }
+
+  const handleErase = (id) => {
+    contactService
+      .erase(id)
+      .then(contact => setPersons(persons.filter(p => p.id !== contact.id)))
   }
 
   const filterPersons = () => {
@@ -83,7 +112,7 @@ const App = () => {
       />
 
       <h2>Contacts</h2>
-      <Contacts persons={filterPersons()} />
+      <Contacts persons={filterPersons()} handleErase={handleErase} />
     </div>
   )
 
