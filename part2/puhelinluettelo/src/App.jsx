@@ -2,6 +2,28 @@ import { useState, useEffect } from 'react'
 import axios from 'axios'
 import contactService from './services/contacts'
 
+
+const notificationStyle = {
+  color: 'green',
+  background: 'lightgrey',
+  fontSize: 20,
+  borderStyle: 'solid',
+  borderRadius: 5
+}
+
+
+const Notification = ({message, color}) => {
+  if (message === null) {
+    return null
+  }
+  else {
+    return (
+      <div style={{...notificationStyle, color: color}}><p>{message}</p></div>
+    )
+  }
+}
+
+
 const Filter = ({value, handleChange}) => (
   <div>Filter <input value={value} onChange={handleChange}/></div>
 )
@@ -45,6 +67,8 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [filter, setFilter] = useState('')
+  const [notification, setNotification] = useState(null)
+  const [notificationColor, setNotificationColor] = useState('green')
 
   useEffect(() => {
     contactService
@@ -68,6 +92,10 @@ const App = () => {
         contactService
           .update(contact)
           .then(contact => setPersons(persons.map(p => p.name !== contact.name ? p : contact)))
+          .catch(error => {
+            showNotification(`Contact ${contact.name} has been removed from the server`, false)
+            setPersons(persons.filter(p => p.name !== contact.name))
+          })
       }
     }
 
@@ -90,16 +118,26 @@ const App = () => {
   const handleErase = (id) => {
     contactService
       .erase(id)
-      .then(contact => setPersons(persons.filter(p => p.id !== contact.id)))
+      .then(contact => {
+        setPersons(persons.filter(p => p.id !== contact.id))
+        showNotification(`Deleted ${contact.name}`)
+      })
   }
 
   const filterPersons = () => {
     return persons.filter((person) => person.name.toLowerCase().startsWith(filter.toLowerCase()))
   }
 
+  const showNotification = (message, good=true) => {
+    setNotification(message);
+    setNotificationColor(good ? 'green' : 'red')
+    setTimeout(() => setNotification(null), 5000);
+  }
+
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={notification} color={notificationColor} />
       <Filter value={filter} handleChange={updateFilter} />
 
       <h2>Add new contact</h2>
