@@ -13,8 +13,8 @@ const getWeather = (latitude, longitude) => {
 
         const now = new Date()
 
-        Object.entries(times).find(([key, value]) => {
-
+        const [index, time] = Object.entries(times).find(([key, value]) => {
+            return
         })
 
         return {
