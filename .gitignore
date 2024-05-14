@@ -1,2 +1,7 @@
 lab*
 node_modules
+package-lock.json
+.env
+dist
+*code-workspace
+PhoneBook

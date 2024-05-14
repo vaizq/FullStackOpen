@@ -84,17 +84,23 @@ const App = () => {
     if (!persons.map((p) => p.name).includes(newName)) {
       contactService
         .create(contact)
-        .then(contact => setPersons(persons.concat(contact)))
+        .then(contact => {
+          setPersons(persons.concat(contact))
+          showNotification(`Created contact ${contact.name}`)
+        })
     }
     else {
       if (window.confirm(`Are you sure you want to modify ${contact.name}`)) {
         contact.id = persons.find(p => p.name === contact.name).id
         contactService
           .update(contact)
-          .then(contact => setPersons(persons.map(p => p.name !== contact.name ? p : contact)))
+          .then(contact =>  {
+            setPersons(persons.map(p => p.name !== contact.name ? p : contact))
+            showNotification(`Updated contact ${contact.name}`)
+          })
           .catch(error => {
-            showNotification(`Contact ${contact.name} has been removed from the server`, false)
             setPersons(persons.filter(p => p.name !== contact.name))
+            showNotification(`Contact ${contact.name} has been removed from the server ${error}`, false)
           })
       }
     }
@@ -118,9 +124,9 @@ const App = () => {
   const handleErase = (id) => {
     contactService
       .erase(id)
-      .then(contact => {
-        setPersons(persons.filter(p => p.id !== contact.id))
-        showNotification(`Deleted ${contact.name}`)
+      .then(data => {
+        setPersons(persons.filter(p => p.id !== id))
+        showNotification(`Deleted ${persons.find((p) => p.id === id).name}`)
       })
   }
 
